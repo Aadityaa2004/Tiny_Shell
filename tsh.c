@@ -243,7 +243,7 @@ void eval(char *cmdline)
  * 
  * Characters enclosed in single quotes are treated as a single
  * argument.  Return true if the user has requested a BG job, false if
- * the user has requested a FG job.  
+ * the user has requested a FG job. Eval decides what to do with a job based on its fg or bg label. 
  */
 int parseline(const char *cmdline, char **argv) 
 {
@@ -317,7 +317,14 @@ int builtin_cmd(char **argv)
 
 /* 
  * do_bgfg - Execute the builtin bg and fg commands
+
+    - bg moves a stopped job to the background
+    - fg moves a job to the foreground.
+
+Parameters:
+    - argv: array of arguments where argv[0] is the command name and argv[1] is the job ID or PID
  */
+
 void do_bgfg(char **argv) 
 {
     struct job_t *job;
@@ -368,6 +375,12 @@ void do_bgfg(char **argv)
 
 /* 
  * waitfg - Block until process pid is no longer the foreground process
+
+ waits for the current foreground job to finish. Loops until the foreground job is no longer the foreground job. 
+
+ Paramenters:
+    - pid: process ID of the foreground job
+
  */
 void waitfg(pid_t pid)
 {
@@ -385,7 +398,13 @@ void waitfg(pid_t pid)
  *     a child job terminates (becomes a zombie), or stops because it
  *     received a SIGSTOP or SIGTSTP signal. The handler reaps all
  *     available zombie children, but doesn't wait for any other
- *     currently running children to terminate.  
+ *     currently running children to terminate.  /
+ * 
+ * Reaps terminated or stopped children and updates the job list accordingly.
+ * Prevents Zombie processes by reaping all terminated children.
+ * 
+ * Parameters:
+ *    - sig: signal number
  */
 void sigchld_handler(int sig) 
 {
