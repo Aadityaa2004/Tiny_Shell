@@ -152,17 +152,27 @@ int main(int argc, char **argv)
     exit(0); /* control never reaches here */
 }
   
-/* 
- * eval - Evaluate the command line that the user has just typed in
- * 
+/*
+
+ * eval - Evaluate user's entered command line
+ *
  * If the user has requested a built-in command (quit, jobs, bg or fg)
- * then execute it immediately. Otherwise, fork a child process and
- * run the job in the context of the child. If the job is running in
- * the foreground, wait for it to terminate and then return.  Note:
- * each child process must have a unique process group ID so that our
+ * then execute it immediately. Otherwise, we fork/create a child process 
+ * and run the job with the functions/roles of the child. If the job 
+ * is running in the foreground, we wait for it to terminate and then 
+ * we return the job, and the job may print something to the terminal. 
+        Note:
+ * 1) Child process runs its given command.
+   2) Parent process tracks child process as foreground or background
+        -->parseline sets bg = 1 when command line ends in & (0 when it 
+   does not, and addjob checks the bg marker for the process, and adds it 
+   to the fg job list when bg = 0. The returned bg value in eval allows it 
+   to decide how to handle the recently created fg or bg process.
+ * Each child process must have a unique process group ID so that our
  * background children don't receive SIGINT (SIGTSTP) from the kernel
- * when we type ctrl-c (ctrl-z) at the keyboard.  
+ * when we type ctrl-c (ctrl-z) at the keyboard. 
 */
+
 void eval(char *cmdline) 
 {
     char *argv[MAXARGS];  // Argument list for execve()
